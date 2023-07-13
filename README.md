@@ -788,7 +788,7 @@ The code for the timer and the **timer selection** is located in [private/IRTime
 | [BluePill / STM32F103C8T6](https://stm32-base.org/boards/STM32F103C8T6-Blue-Pill) | **TIM4** | %                   | **PB6 & PB7 & PB8 & PB9** |
 | [RP2040 / Pi Pico](https://github.com/earlephilhower/arduino-pico)       | [default alarm pool](https://raspberrypi.github.io/pico-sdk-doxygen/group__repeating__timer.html) | All pins             | No pin |
 | [RP2040 / Mbed based](https://github.com/arduino/ArduinoCore-mbed)       | Mbed Ticker       | All pins            | No pin |
-| [SPRESENSE](https://developer.sony.com/spresense)                        | 16-28,**18**      | **3**,5,6,          | No pin |
+| [SPRESENSE](https://developer.sony.com/spresense)                        | 16-28,**18**      | **3**,5,6,9         | No pin |
 
 
 ### No timer required for sending
