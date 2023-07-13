@@ -298,6 +298,16 @@ void noTone(uint8_t aPinNumber){
 #define noTone(a) void()
 #define TONE_PIN           42 // Dummy for examples using it
 
+#elif defined(ARDUINO_ARCH_SPRESENSE) 
+#define IR_RECEIVE_PIN          18
+#define IR_RECEIVE_PIN_STRING   "18"
+#define IR_SEND_PIN             3
+#define IR_SEND_PIN_STRING      "3"
+#define APPLICATION_PIN         12
+#define APPLICATION_PIN_STRING  "12"
+#define TONE_PIN                44 // Dummy (use GNSS_1PPS_OUT pin for tentative)
+
+
 #else
 #warning Board / CPU is not detected using pre-processor symbols -> using default values, which may not fit. Please extend PinDefinitionsAndMore.h.
 // Default valued for unidentified boards
@@ -309,7 +319,7 @@ void noTone(uint8_t aPinNumber){
 #define _IR_TIMING_TEST_PIN 7
 #endif // defined(ESP8266)
 
-#if defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(PARTICLE) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_SPRESENSE)
+#if defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(PARTICLE) || defined(ARDUINO_ARCH_MBED) 
 #define SEND_PWM_BY_TIMER // We do not have pin restrictions for this CPU's, so lets use the hardware PWM for send carrier signal generation
 #else
 # if defined(SEND_PWM_BY_TIMER)
