@@ -52,7 +52,7 @@ void enableSendPWMByTimer();
 void disableSendPWMByTimer();
 void timerConfigForSend(uint16_t aFrequencyKHz);
 
-#if defined(SEND_PWM_BY_TIMER) && ( (defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(PARTICLE)) || defined(ARDUINO_ARCH_MBED) )
+#if defined(SEND_PWM_BY_TIMER) && ( (defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(PARTICLE)) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_SPRESENSE))
 #define SEND_PWM_DOES_NOT_USE_RECEIVE_TIMER // Receive timer and send generation are independent, so it is recommended to always define SEND_PWM_BY_TIMER
 #endif
 
@@ -1879,6 +1879,108 @@ void timerConfigForSend(uint16_t aFrequencyKHz) {
     pinMode(IrSender.sendPin, OUTPUT);
 #    endif
     ir_out_kHz = aFrequencyKHz;
+}
+#  endif // defined(SEND_PWM_BY_TIMER)
+
+
+/**********************************************************
+ * Spresense boards - can use 3,5,6,9 pin for send PWM
+ * 3 pin -- PWM3
+ * 5 pin -- PWM1
+ * 6 pin -- PWM0
+ * 9 pin -- PWM2
+ * Receive timer and send generation are independent,
+ * so it is recommended to always define SEND_PWM_BY_TIMER
+ **********************************************************/
+#elif defined(ARDUINO_ARCH_SPRESENSE)
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <nuttx/timers/pwm.h>
+
+unsigned int interval = 0;
+
+unsigned int timer_callback() {
+  IRReceiveTimerInterruptHandler();
+  return interval;
+}
+
+void timerEnableReceiveInterrupt() {
+  interval = 50; // 50usec
+  attachTimerInterrupt(timer_callback, interval);
+};
+
+void timerDisableReceiveInterrupt() {
+  interval = 0;
+  delayMicroseconds(50); // to avoid timer-stop errors
+  detachTimerInterrupt();
+};
+
+#  if defined(ISR)
+#undef ISR
+#  endif
+#define ISR() void notImplemented(void)
+
+void timerConfigForReceive() {
+}
+
+#  if defined(SEND_PWM_BY_TIMER)
+#define IR_SEND_PIN      3
+struct pwm_info_s info;
+int fd;
+
+void enableSendPWMByTimer() {
+  ioctl(fd, PWMIOC_START, 0);
+}
+
+void disableSendPWMByTimer() {
+  ioctl(fd, PWMIOC_STOP, 0);
+}
+
+void timerConfigForSend(uint16_t aFrequencyKHz) {
+  timerDisableReceiveInterrupt();
+  uint16_t send_pin = 3;
+#    if defined(IR_SEND_PIN)
+    // setup PWM timer 
+    // 3 pin -- PWM3 (default?)
+    // 5 pin -- PWM1
+    // 6 pin -- PWM0
+    // 9 pin -- PWM2
+    // pinMode(IR_SEND_PIN, OUTPUT);
+  send_pin = IR_SEND_PIN;
+#    else
+    // pinMode(IrSender.sendPin, OUTPUT);
+  send_pin = IrSender.sendPin;
+#    endif
+
+  switch (send_pin) {
+  case 3:
+      fd = open("/dev/pwm3", O_RDONLY);
+      break;
+  case 5:
+      fd = open("/dev/pwm1", O_RDONLY);
+      break;
+  case 6:
+      fd = open("/dev/pwm0", O_RDONLY);
+      break;
+  case 9:
+      fd = open("/dev/pwm9", O_RDONLY);
+      break;
+  default:
+      fd = -1;
+  }
+
+  if (fd < 0) {
+    Serial.println("!!! Invalid send pin assigned!");
+    Serial.println("The send pin should be 3, 5, 6, 9");
+    close(fd);
+    return;
+  }
+  info.frequency = 38000; // 38kHz
+  info.duty = 0x7fff;
+  ioctl(fd, PWMIOC_SETCHARACTERISTICS, (unsigned long)((uintptr_t)&info));
+    
+  (void) aFrequencyKHz;
 }
 #  endif // defined(SEND_PWM_BY_TIMER)
 
