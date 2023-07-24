@@ -1964,7 +1964,7 @@ void timerConfigForSend(uint16_t aFrequencyKHz) {
       fd = open("/dev/pwm0", O_RDONLY);
       break;
   case 9:
-      fd = open("/dev/pwm9", O_RDONLY);
+      fd = open("/dev/pwm2", O_RDONLY);
       break;
   default:
       fd = -1;
@@ -1973,7 +1973,6 @@ void timerConfigForSend(uint16_t aFrequencyKHz) {
   if (fd < 0) {
     Serial.println("!!! Invalid send pin assigned!");
     Serial.println("The send pin should be 3, 5, 6, 9");
-    close(fd);
     return;
   }
   info.frequency = 38000; // 38kHz
